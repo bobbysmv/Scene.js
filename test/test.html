@@ -1,0 +1,154 @@
+<!doctype html>
+<html>
+<head>
+    <title>test</title>
+    <meta charset="UTF-8" />
+    <script type="text/javascript" src="../scene.js"></script>
+    <script type="text/javascript" src="./js/tween.js"></script>
+    <script type="text/javascript" src="./js/util.js"></script>
+    <style>
+
+    </style>
+</head>
+<body>
+<script type="text/javascript">
+    var root = new util.View().putStyle( { top:0, left:0, bottom:0, right:0 });
+    document.body.appendChild( root.display );
+
+    Scene.add("/").set({
+        onEnter: function(){
+            this.header = new util.TextView("title").addTo( root)
+                    .set( { top:0, left:0, right:0, height: 100 })
+                    .putStyle( { background:"#555555", color:"#ffffff", fontSize:"200%" } );
+            this.container = new util.View().addTo( root )
+                    .set( { top:100, left:0, right:0, bottom:100 }).putStyle( { background:"#eeeeee" } );
+            this.footer = new util.View().addTo( root )
+                    .set( { bottom:0, left:0, right:0, height: 100 }).putStyle( { background:"#555555" } );
+        },
+
+        onShow: function(){
+            this.header.text = "Root";
+
+            this.btn1 = new util.TextView( "goto scene1" ).addTo( this.container).putStyle({position: "relative"})
+                    .on("click", function(){ Scene.goto("/scene1"); });
+            this.btn1.display.className+=" list_item";
+
+            this.btn2 = new util.TextView( "goto scene2").addTo( this.container ).putStyle({position: "relative"})
+                    .on("click", function(){ Scene.goto("/scene2"); });
+            this.btn2.display.className+=" list_item";
+
+            this.container
+                    .set( {opacity:0,top:150} )
+                    .removeTweens()
+                    .tween()
+                    .to( {opacity:1,top:100}, 20, createjs.Ease.elasticOut );
+        },
+
+        onHide: function(){
+            this.btn1.removeFromParent();
+            this.btn2.removeFromParent();
+        },
+
+        onLeave: function(){
+
+        }
+    });
+
+
+    var scene1 = Scene.add("/scene1");
+    scene1.set({
+        onShow: function(){
+            this.parent.header.text = "Root/Scene1";
+
+            this.content = new util.TextView( "back" )
+                    .on("click", function(){ Scene.goto("/"); });
+
+            root.putStyle( {opacity:1} )
+                    .removeTweens()
+                    .tween()
+                        .to( { right:innerWidth, opacity:0 }, 10, createjs.Ease.sineInOut )
+                        .call( (function(){
+                            this.content.addTo( this.parent.container );
+                        }).bind(this) )
+                        .to( {right:0, left:innerWidth},0 )
+                        .to( {left:0, opacity:1}, 15, createjs.Ease.sineInOut );
+        },
+
+        onHide: function(){
+            this.content.removeFromParent();
+        }
+    });
+
+
+    Scene.add("/scene2").set({
+
+        onEnter: function(){
+            this.parent.footer.tween().to( { height:200 }, 20, createjs.Ease.circOut );
+        },
+
+        onShow: function(){
+            this.parent.header.text = "Root/Scene2";
+
+            this.btn1 = new util.TextView( "back").putStyle({position: "relative"})
+                    .on("click", function(){ Scene.goto("/"); });
+            this.btn2 = new util.TextView( "child").putStyle({position: "relative"})
+                    .on("click", function(){ Scene.goto("/scene2/child"); });
+
+            root.putStyle( {opacity:1} )
+                    .removeTweens()
+                    .tween()
+                    .to( { left:innerWidth, opacity:0 }, 10, createjs.Ease.sineInOut )
+                    .call( (function(){
+                        this.btn1.addTo( this.parent.container );
+                        this.btn2.addTo( this.parent.container );
+                    }).bind(this) )
+                    .to( {left:0, right:innerWidth},0 )
+                    .to( {right:0, opacity:1}, 15, createjs.Ease.sineInOut );
+        },
+
+        onHide: function(){
+            this.btn1.removeFromParent();
+            this.btn2.removeFromParent();
+        },
+
+        onLeave: function(){
+            this.parent.footer.tween().to( { height:100 }, 20, createjs.Ease.circOut );
+        }
+    });
+
+
+    var ChildScene = function(){ Scene.apply( this, arguments ); };
+    ChildScene.prototype = Object.create( Scene.prototype, {
+
+        onShow: { value: function(){
+            this.root.header.text = "Root/Scene2/Child";
+
+            this.btn1 = new util.TextView( "root").putStyle({position: "relative"})
+                    .on("click", function(){ Scene.goto("/"); });
+            this.btn2 = new util.TextView( "back").putStyle({position: "relative"})
+                    .on("click", function(){ Scene.goto("/scene2"); });
+
+            root.putStyle( {opacity:1} )
+                    .removeTweens()
+                    .tween()
+                    .to( { bottom:innerHeight, opacity:0 }, 10, createjs.Ease.sineInOut )
+                    .call( (function(){
+                this.btn1.addTo( this.root.container );
+                this.btn2.addTo( this.root.container );
+            }).bind(this) )
+                    .to( {bottom:0, opacity:1}, 15, createjs.Ease.sineInOut );
+        }},
+
+        onHide: { value: function(){
+            this.btn1.removeFromParent();
+            this.btn2.removeFromParent();
+        }}
+
+    });
+    Scene.add("/scene2/child", new ChildScene() );
+
+    Scene.goto("/");
+
+</script>
+</body>
+</html>
